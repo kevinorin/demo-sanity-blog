@@ -1,86 +1,84 @@
-import type { NextPage } from 'next'
-import Head from 'next/head'
-import Image from 'next/image'
+import type { NextPage } from 'next';
+import Head from 'next/head';
+import Image from 'next/image';
+import Header from '../components/Header';
+import Link from "next/link";
+import { sanityClient, urlFor } from "../sanity";
+import { Post } from "../typings";
 
-const Home: NextPage = () => {
+interface Props {
+  posts: [Post];
+}
+
+export default function Home({ posts }: Props) {
+  console.log(posts);
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center py-2">
+    <div className="max-w-7xl mx-auto">
       <Head>
-        <title>Create Next App</title>
+        <title>BGN News</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="flex w-full flex-1 flex-col items-center justify-center px-20 text-center">
-        <h1 className="text-6xl font-bold">
-          Welcome to{' '}
-          <a className="text-blue-600" href="https://nextjs.org">
-            Next.js!
-          </a>
-        </h1>
+      <Header/>
+     
+      <div className="flex justify-between items-center bg-yellow-200 border-y border-black py-10 lg:py-0">
+          <div className="px-10 space-y-5">
+              <h1 className="text-5xl max-w-xl font-serif">This is a React.js & Next.js project with a backend powered by <span className="underline decoration-black decoration-4">Sanity.io</span>. </h1>
+              <h2 className="max-w-md">The Sanity CMS uses Sanity Content Lake to store and access content. It runs in the cloud and is fully managed by Sanity. </h2>
+          </div>
+          
+          <img className="hidden md:inline-flex h-32 lg:h-full" src="https://images.g2crowd.com/uploads/product/image/large_detail/large_detail_96102ac6497377cd53da621075fe828e/sanity.png"/>
+      </div>
 
-        <p className="mt-3 text-2xl">
-          Get started by editing{' '}
-          <code className="rounded-md bg-gray-100 p-3 font-mono text-lg">
-            pages/index.tsx
-          </code>
-        </p>
+      { /* Posts */ }
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 p-2 md:p-6">
+        {posts.map(post => (
+          
+            <div className="group overflow-hidden">
+              <Link key={post._id} href={`/post/${post.slug.current}`}>
+                <img className="h-60 w-full rounded-lg cursor-pointer object-cover group-hover:scale-105 transition-transform duration-200 ease-in-out" src={urlFor(post.mainImage).url()!} alt="" />
+              </Link>
+              <div className="p-3 bg-white justify-between content-center">
+                <div className="flex justify-start content-evenly">
+                  <div>
+                    <img className="h-8 rounded-full" src={urlFor(post.author.image).url()} alt="" />
+                  </div>
+                  <div>
+                    <p className=""><span className="p-2 align-middle">{post.author.name}</span></p>
+                  </div>
+                </div>
+                <Link key={post._id} href={`/post/${post.slug.current}`}>
+                  <div className="flex cursor-pointer">
+                    <p>{post.title}</p>
+                  </div>
+                </Link>
+              </div>
+            </div>
+        ))}
+      </div>
 
-        <div className="mt-6 flex max-w-4xl flex-wrap items-center justify-around sm:w-full">
-          <a
-            href="https://nextjs.org/docs"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Documentation &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Find in-depth information about Next.js features and its API.
-            </p>
-          </a>
-
-          <a
-            href="https://nextjs.org/learn"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Learn &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Learn about Next.js in an interactive course with quizzes!
-            </p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Examples &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Discover and deploy boilerplate example Next.js projects.
-            </p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="mt-6 w-96 rounded-xl border p-6 text-left hover:text-blue-600 focus:text-blue-600"
-          >
-            <h3 className="text-2xl font-bold">Deploy &rarr;</h3>
-            <p className="mt-4 text-xl">
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className="flex h-24 w-full items-center justify-center border-t">
-        <a
-          className="flex items-center justify-center gap-2"
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <Image src="/vercel.svg" alt="Vercel Logo" width={72} height={16} />
-        </a>
-      </footer>
     </div>
-  )
+  );
 }
 
-export default Home
+export const getServerSideProps = async () => {
+  const query = `*[_type == "post"]{
+    _id,
+    title,
+    slug,
+    description,
+    mainImage,
+    author-> {
+      name,
+      image
+    }
+  }`;
+
+  const posts = await sanityClient.fetch(query);
+
+  return {
+    props: {
+      posts,
+    }
+  }
+};
