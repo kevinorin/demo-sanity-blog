@@ -11,7 +11,6 @@ interface Props {
 }
 
 export default function Home({ posts }: Props) {
-  console.log(posts);
   return (
     <div className="max-w-7xl mx-auto">
       <Head>
@@ -21,7 +20,7 @@ export default function Home({ posts }: Props) {
 
       <Header/>
      
-      <div className="flex justify-between items-center bg-yellow-200 border-y border-black py-10 lg:py-0">
+      <div className="flex justify-between items-center bg-green-500 border-y border-black py-10 lg:py-0">
           <div className="px-10 space-y-5">
               <h1 className="text-5xl max-w-xl font-serif">This is a React.js & Next.js project with a backend powered by <span className="underline decoration-black decoration-4">Sanity.io</span>. </h1>
               <h2 className="max-w-md">The Sanity CMS uses Sanity Content Lake to store and access content. It runs in the cloud and is fully managed by Sanity. </h2>
@@ -79,6 +78,7 @@ export const getServerSideProps = async () => {
   return {
     props: {
       posts,
-    }
-  }
+      revalidate: 21600, // initiate ISR to update cache every 6 hours
+    },
+  }; 
 };
